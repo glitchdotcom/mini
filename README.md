@@ -15,6 +15,6 @@ Repeated keys, that aren't array keys, replace their previous value.
 
 To use simply:
 
- > go get github.com/fogcreek/mini
+    % go get github.com/fogcreek/mini
 
 copyright © 2015 Fog Creek Software, Inc.
