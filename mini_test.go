@@ -22,9 +22,17 @@ false=false
 ; comment`
 
 	filepath := path.Join(os.TempDir(), "simpleini.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
+	f, err := os.Create(filepath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(filepath)
+	if _, err := f.WriteString(simpleIni); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
 
 	config, err := LoadConfiguration(filepath)
 
@@ -78,12 +86,7 @@ SECOND=beta
 Third="gamma bamma"
 FourTh = 'delta'`
 
-	filepath := path.Join(os.TempDir(), "caseins.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Case insensitive configuration should load without error.")
 
@@ -101,12 +104,7 @@ func TestArrayOfStrings(t *testing.T) {
 key[]=two
 noarray=three`
 
-	filepath := path.Join(os.TempDir(), "stringarray.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Simple configuration should load without error.")
 
@@ -129,12 +127,7 @@ func TestArrayOfIntegers(t *testing.T) {
 key[]=2
 noarray=3`
 
-	filepath := path.Join(os.TempDir(), "intarray.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Simple configuration should load without error.")
 
@@ -157,12 +150,7 @@ func TestArrayOfFloats(t *testing.T) {
 key[]=2.2
 noarray=3.3`
 
-	filepath := path.Join(os.TempDir(), "floatarray.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Simple configuration should load without error.")
 
@@ -200,12 +188,7 @@ false=true
 #comment
 ; comment`
 
-	filepath := path.Join(os.TempDir(), "sectioned.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Sectioned configuration should load without error.")
 
@@ -238,12 +221,7 @@ key[]=one
 key[]=two
 noarray=three`
 
-	filepath := path.Join(os.TempDir(), "stringarrayInSection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -269,12 +247,7 @@ key[]=1
 key[]=2
 noarray=3`
 
-	filepath := path.Join(os.TempDir(), "intarrayInSection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -300,12 +273,7 @@ key[]=1.1
 key[]=2.2
 noarray=3.3`
 
-	filepath := path.Join(os.TempDir(), "floatarrayInSection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -338,12 +306,7 @@ first=one
 int=555
 float=124.3`
 
-	filepath := path.Join(os.TempDir(), "multisection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Sectioned configuration should load without error.")
 
@@ -382,12 +345,7 @@ float=124.3
 int=124
 float=1222.7`
 
-	filepath := path.Join(os.TempDir(), "splitsection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Sectioned configuration should load without error.")
 
@@ -413,12 +371,7 @@ func TestRepeatedKey(t *testing.T) {
 	simpleIni := `first=alpha
 first=beta`
 
-	filepath := path.Join(os.TempDir(), "simpleini.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -432,12 +385,7 @@ func TestDefaults(t *testing.T) {
 	simpleIni := `first=alpha
 third=\`
 
-	filepath := path.Join(os.TempDir(), "defaults.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -464,12 +412,7 @@ bool=zipzap
 intarray[]=blip
 floatarray[]=blap`
 
-	filepath := path.Join(os.TempDir(), "parseerror.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -488,12 +431,7 @@ func TestMissingArray(t *testing.T) {
 
 	simpleIni := `first=alpha`
 
-	filepath := path.Join(os.TempDir(), "missingarray.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -513,12 +451,7 @@ func TestDefaultsWithSection(t *testing.T) {
 	simpleIni := `[section]
 first=alpha`
 
-	filepath := path.Join(os.TempDir(), "defaults.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -574,12 +507,7 @@ F64s[]=22.0
 #comment
 ; comment`
 
-	filepath := path.Join(os.TempDir(), "simpleini.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Simple configuration should load without error.")
 
@@ -623,12 +551,7 @@ func TestLoadStructMissingSection(t *testing.T) {
 
 	simpleIni := ``
 
-	filepath := path.Join(os.TempDir(), "simpleini.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Simple configuration should load without error.")
 
@@ -643,12 +566,7 @@ func TestMissingSection(t *testing.T) {
 	simpleIni := `[section]
 first=alpha`
 
-	filepath := path.Join(os.TempDir(), "simpleini.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Simple configuration should load without error.")
 
@@ -663,12 +581,7 @@ func TestMissingArrayInSection(t *testing.T) {
 	simpleIni := `[section]
 first=alpha`
 
-	filepath := path.Join(os.TempDir(), "missingarray.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -694,25 +607,6 @@ key[]=one
 key[]=two
 noarray=three`
 
-	filepath := path.Join(os.TempDir(), "stringarrayInSection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	_, err := LoadConfiguration(filepath)
-
-	assert.NotNil(t, err, "Configuration should load with error.")
-}
-
-func TestErrWithReader(t *testing.T) {
-
-	simpleIni := `key=nope
-noarray=nope
-[section
-key[]=one
-key[]=two
-noarray=three`
-
 	_, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.NotNil(t, err, "Configuration should load with error.")
@@ -723,12 +617,7 @@ func TestBadKeyValue(t *testing.T) {
 	simpleIni := `key=nope
 noarray:nope`
 
-	filepath := path.Join(os.TempDir(), "stringarrayInSection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	_, err := LoadConfiguration(filepath)
+	_, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.NotNil(t, err, "Configuration should load with error.")
 }
@@ -742,12 +631,7 @@ key[]=one
 key[]=two
 noarray=three`
 
-	filepath := path.Join(os.TempDir(), "stringarrayInSection.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Configuration should load without error.")
 
@@ -755,10 +639,11 @@ noarray=three`
 }
 
 func TestBadFile(t *testing.T) {
-	filepath := path.Join(os.TempDir(), "xxx.txt")
+	const filepath = "/no.such.dir/xxx.no-such-file.txt"
 	config, err := LoadConfiguration(filepath)
 
 	assert.NotNil(t, err, "No valid file is an error.")
+	assert.True(t, os.IsNotExist(err), "No valid file errors is of expected type.")
 	assert.Nil(t, config, "Configuration should be nil.")
 
 }
@@ -773,16 +658,40 @@ func TestStringEscape(t *testing.T) {
 
 	simpleIni := `first=\n\t\rhello`
 
-	filepath := path.Join(os.TempDir(), "simpleini.txt")
-	f, _ := os.Create(filepath)
-	f.WriteString(simpleIni)
-	f.Close()
-
-	config, err := LoadConfiguration(filepath)
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
 
 	assert.Nil(t, err, "Simple configuration should load without error.")
 
 	assert.Equal(t, config.String("first", ""), "\n\t\rhello", "Read value of first wrong")
 
 	assert.Equal(t, len(config.Keys()), 1, "ini contains 1 fields")
+}
+
+func BenchmarkLoadConfiguration(b *testing.B) {
+
+	simpleIni := `first=alpha
+int=32
+float=3.14
+
+[section_one]
+first=raz
+
+[section_two]
+first=one
+int=555
+float=124.3
+
+[section_one]
+int=124
+float=1222.7`
+
+	b.ReportAllocs()
+	r := strings.NewReader(simpleIni)
+	for i := 0; i < b.N; i++ {
+		r.Seek(0, os.SEEK_SET)
+		_, err := LoadConfigurationFromReader(r)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
 }
