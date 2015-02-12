@@ -67,7 +67,7 @@ func (config *Config) InitializeFromPath(path string) error {
 
 	defer f.Close()
 
-	return config.InitializeFromReader(f)
+	return config.InitializeFromReader(bufio.NewReader(f))
 }
 
 /*
@@ -86,9 +86,8 @@ func (config *Config) InitializeFromReader(input io.Reader) error {
 		curLine := scanner.Text()
 
 		curLine = strings.TrimSpace(curLine)
-		length := len(curLine)
 
-		if length == 0 {
+		if len(curLine) == 0 {
 			continue // ignore empty lines
 		}
 
@@ -99,20 +98,19 @@ func (config *Config) InitializeFromReader(input io.Reader) error {
 		if strings.HasPrefix(curLine, "[") {
 
 			if !strings.HasSuffix(curLine, "]") {
-				return errors.New("Section names must be surrounded by [ and ], as in [section].")
+				return errors.New("mini: section names must be surrounded by [ and ], as in [section]")
 			}
 
-			sectionName := curLine[1 : length-1]
+			sectionName := curLine[1 : len(curLine)-1]
 
 			if sect, ok := config.sections[sectionName]; !ok { //reuse sections
 				currentSection = new(configSection)
 				currentSection.name = sectionName
 				currentSection.values = make(map[string]interface{})
+				config.sections[currentSection.name] = currentSection
 			} else {
 				currentSection = sect
 			}
-
-			config.sections[currentSection.name] = currentSection
 
 			continue
 		}
@@ -120,7 +118,7 @@ func (config *Config) InitializeFromReader(input io.Reader) error {
 		index := strings.Index(curLine, "=")
 
 		if index <= 0 {
-			return errors.New("Configuration format requires an equals between the key and value.")
+			return errors.New("mini: configuration format requires an equals between the key and value")
 		}
 
 		key := strings.ToLower(strings.TrimSpace(curLine[0:index]))
@@ -140,7 +138,7 @@ func (config *Config) InitializeFromReader(input io.Reader) error {
 		}
 
 		if isArray {
-			arr, _ := valueMap[key]
+			arr := valueMap[key]
 
 			if arr == nil {
 				arr = make([]interface{}, 0)
@@ -187,9 +185,9 @@ func getArray(values map[string]interface{}, key string) []interface{} {
 	val, ok := values[key]
 
 	if ok {
-		switch val.(type) {
+		switch v := val.(type) {
 		case []interface{}:
-			return val.([]interface{})
+			return v
 		default:
 			retVal := make([]interface{}, 1)
 			retVal[0] = val
@@ -272,8 +270,12 @@ func getStrings(values map[string]interface{}, key string) []string {
 	if val != nil {
 		retVal := make([]string, len(val))
 
+		var err error
 		for i, v := range val {
-			retVal[i], _ = strconv.Unquote(fmt.Sprintf("\"%v\"", v))
+			retVal[i], err = strconv.Unquote(fmt.Sprintf("\"%v\"", v))
+			if err != nil {
+				return nil
+			}
 		}
 		return retVal
 	}
@@ -288,13 +290,12 @@ func getIntegers(values map[string]interface{}, key string) []int64 {
 	if val != nil {
 		retVal := make([]int64, len(val))
 
+		var err error
 		for i, v := range val {
-			intv, err := strconv.ParseInt(fmt.Sprint(v), 0, 64)
-
+			retVal[i], err = strconv.ParseInt(fmt.Sprint(v), 0, 64)
 			if err != nil {
 				return nil
 			}
-			retVal[i] = intv
 		}
 		return retVal
 	}
@@ -309,13 +310,12 @@ func getFloats(values map[string]interface{}, key string) []float64 {
 	if val != nil {
 		retVal := make([]float64, len(val))
 
+		var err error
 		for i, v := range val {
-			floatv, err := strconv.ParseFloat(fmt.Sprint(v), 64)
-
+			retVal[i], err = strconv.ParseFloat(fmt.Sprint(v), 64)
 			if err != nil {
 				return nil
 			}
-			retVal[i] = floatv
 		}
 		return retVal
 	}
