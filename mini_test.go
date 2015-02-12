@@ -667,6 +667,16 @@ func TestStringEscape(t *testing.T) {
 	assert.Equal(t, len(config.Keys()), 1, "ini contains 1 fields")
 }
 
+func TestBadStringArray(t *testing.T) {
+
+	simpleIni := `first[]=\`
+
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
+
+	assert.Nil(t, err, "Simple configuration should load without error.")
+	assert.Nil(t, config.Strings("first"), "Read value of first wrong")
+}
+
 func BenchmarkLoadConfiguration(b *testing.B) {
 
 	simpleIni := `first=alpha
