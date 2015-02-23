@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/FogCreek/mini?status.svg)](https://godoc.org/github.com/FogCreek/mini)
+
 Mini is a simple [ini configuration file](http://en.wikipedia.org/wiki/INI_file) parser.
 
 The ini syntax supported includes:
