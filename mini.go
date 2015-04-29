@@ -154,6 +154,13 @@ func (config *Config) InitializeFromReader(input io.Reader) error {
 	return scanner.Err()
 }
 
+/*
+SetName sets the config's name, which allows it to be returned in SectionNames, or in get functions that take a name.
+*/
+func (config *Config) SetName(name string) {
+	config.name = name
+}
+
 //Return non-array values
 func get(values map[string]interface{}, key string) interface{} {
 	if len(key) == 0 || values == nil {
@@ -375,11 +382,21 @@ func (config *Config) Floats(key string) []float64 {
 	return getFloats(config.values, key)
 }
 
+func (config *Config) sectionForName(sectionName string) *configSection {
+	if len(sectionName) == 0 || sectionName == config.name {
+		return &(config.configSection)
+	}
+
+	return config.sections[sectionName]
+}
+
 /*
 StringFromSection looks for the specified key and returns it as a string. If not found the default value def is returned.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) StringFromSection(sectionName string, key string, def string) string {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		return getString(section.values, key, def)
@@ -390,9 +407,11 @@ func (config *Config) StringFromSection(sectionName string, key string, def stri
 
 /*
 BooleanFromSection looks for the specified key and returns it as a boolean. If not found the default value def is returned.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) BooleanFromSection(sectionName string, key string, def bool) bool {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		return getBoolean(section.values, key, def)
@@ -403,9 +422,11 @@ func (config *Config) BooleanFromSection(sectionName string, key string, def boo
 
 /*
 IntegerFromSection looks for the specified key and returns it as an int64. If not found the default value def is returned.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) IntegerFromSection(sectionName string, key string, def int64) int64 {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		return getInteger(section.values, key, def)
@@ -416,9 +437,11 @@ func (config *Config) IntegerFromSection(sectionName string, key string, def int
 
 /*
 FloatFromSection looks for the specified key and returns it as a float. If not found the default value def is returned.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) FloatFromSection(sectionName string, key string, def float64) float64 {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		return getFloat(section.values, key, def)
@@ -429,10 +452,12 @@ func (config *Config) FloatFromSection(sectionName string, key string, def float
 
 /*
 StringsFromSection returns the value of an array key, if the value of the key is a non-array, then
-that value is returned in an array of length 1
+that value is returned in an array of length 1.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) StringsFromSection(sectionName string, key string) []string {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		return getStrings(section.values, key)
@@ -446,7 +471,7 @@ IntegersFromSection looks for an array of integers in the provided section and u
 If no matches are found nil is returned.
 */
 func (config *Config) IntegersFromSection(sectionName string, key string) []int64 {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		return getIntegers(section.values, key)
@@ -458,9 +483,11 @@ func (config *Config) IntegersFromSection(sectionName string, key string) []int6
 /*
 FloatsFromSection looks for an array of floats in the provided section and under the provided key.
 If no matches are found nil is returned.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) FloatsFromSection(sectionName string, key string) []float64 {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		return getFloats(section.values, key)
@@ -480,11 +507,13 @@ DataFromSection reads the values of a section into a struct. The values should b
   []float64
 Values that are missing in the section are not set, and values that are missing in the
 struct but present in the section are ignored.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) DataFromSection(sectionName string, data interface{}) bool {
-	section, ok := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
-	if !ok {
+	if section == nil {
 		return false
 	}
 
@@ -549,9 +578,11 @@ func (config *Config) Keys() []string {
 
 /*
 KeysForSection returns all of the keys found in the section named sectionName.
+
+If the section name matches the config.name or "" the global data is searched.
 */
 func (config *Config) KeysForSection(sectionName string) []string {
-	section := config.sections[sectionName]
+	section := config.sectionForName(sectionName)
 
 	if section != nil {
 		keys := make([]string, 0, len(section.values))
@@ -563,4 +594,23 @@ func (config *Config) KeysForSection(sectionName string) []string {
 	}
 
 	return nil
+}
+
+/*
+SectionNames returns the names for each of the sections in a config structure. If the config was assigned
+a name, that name is included in the list. If the name is not set, then only explicitely named sections are returned.
+*/
+func (config *Config) SectionNames() []string {
+	sectionNames := make([]string, 0, len(config.sections))
+	for name := range config.sections {
+		sectionNames = append(sectionNames, name)
+	}
+
+	if len(config.name) > 0 {
+		sectionNames = append(sectionNames, config.name)
+	}
+
+	sort.Strings(sectionNames)
+
+	return sectionNames
 }
