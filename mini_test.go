@@ -314,6 +314,16 @@ float=124.3`
 	assert.Equal(t, config.Integer("int", 0), 32, "Read value of int wrong")
 	assert.Equal(t, config.Float("float", 0), 3.14, "Read value of float wrong")
 
+	assert.Equal(t, config.StringFromSection("", "first", ""), "alpha", "Read value of first wrong")
+	assert.Equal(t, config.IntegerFromSection("", "int", 0), 32, "Read value of int wrong")
+	assert.Equal(t, config.FloatFromSection("", "float", 0), 3.14, "Read value of float wrong")
+
+	config.SetName("section_zero")
+
+	assert.Equal(t, config.StringFromSection("section_zero", "first", ""), "alpha", "Read value of first wrong")
+	assert.Equal(t, config.IntegerFromSection("section_zero", "int", 0), 32, "Read value of int wrong")
+	assert.Equal(t, config.FloatFromSection("section_zero", "float", 0), 3.14, "Read value of float wrong")
+
 	assert.Equal(t, config.StringFromSection("section_one", "first", ""), "raz", "Read value of first from section wrong")
 	assert.Equal(t, config.IntegerFromSection("section_one", "int", 0), 124, "Read value of int in section wrong")
 	assert.Equal(t, config.FloatFromSection("section_one", "float", 0), 1222.7, "Read value of float in section wrong")
@@ -325,6 +335,51 @@ float=124.3`
 	assert.Equal(t, len(config.Keys()), 3, "Section ini contains 3 fields")
 	assert.Equal(t, len(config.KeysForSection("section_one")), 3, "Section in ini contains 3 fields")
 	assert.Equal(t, len(config.KeysForSection("section_two")), 3, "Section in ini contains 3 fields")
+}
+
+func TestSectionNames(t *testing.T) {
+
+	simpleIni := `first=alpha
+int=32
+float=3.14
+
+[section_one]
+first=raz
+int=124
+float=1222.7
+
+[section_two]
+first=one
+
+[section_three]
+int=555
+float=124.3`
+
+	config, err := LoadConfigurationFromReader(strings.NewReader(simpleIni))
+
+	assert.Nil(t, err, "Sectioned configuration should load without error.")
+
+	sectionNames := config.SectionNames()
+
+	assert.Equal(t, len(sectionNames), 3, "Read section name array wrong")
+
+	//Section names should be sorted, alphabetically
+	assert.Equal(t, sectionNames[0], "section_one", "Read section name wrong")
+	assert.Equal(t, sectionNames[1], "section_three", "Read section name wrong")
+	assert.Equal(t, sectionNames[2], "section_two", "Read section name wrong")
+
+	config.SetName("section_zero")
+
+	sectionNames = config.SectionNames()
+
+	assert.Equal(t, len(sectionNames), 4, "Read section name array wrong")
+
+	//Section names should be sorted, alphabetically
+	assert.Equal(t, sectionNames[0], "section_one", "Read section name wrong")
+	assert.Equal(t, sectionNames[1], "section_three", "Read section name wrong")
+	assert.Equal(t, sectionNames[2], "section_two", "Read section name wrong")
+	assert.Equal(t, sectionNames[3], "section_zero", "Read section name wrong")
+
 }
 
 func TestSplitSection(t *testing.T) {
